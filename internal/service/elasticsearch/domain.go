@@ -133,8 +133,8 @@ func ResourceDomain() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`ENABLED|DISABLED`), "must be 'ENABLED' or 'DISABLED'"),
 						},
-						"maintenance_schedules": {
-							Type:     schema.TypeList,
+						"maintenance_schedule": {
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{

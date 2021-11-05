@@ -50,17 +50,33 @@ func expandAutoTuneOptions(m []interface{}) *elasticsearch.AutoTuneOptionsInput 
 	config := elasticsearch.AutoTuneOptionsInput{}
 	group := m[0].(map[string]interface{})
 
-	if desiredState, ok := group["desired_state"].(string); desiredState == "ENABLED" {
-		config.DesiredState = aws.String(desiredState)
+	if desiredState := group["desired_state"].(string); desiredState == "ENABLED" {
+		config.SetDesiredState(desiredState)
 
-		if schedules, ok := group["maintenance_schedules"].([]interface{}); ok {
+		if schedules, ok := group["maintenance_schedule"].([]interface{}); ok {
 			for _, v := range schedules {
 				ams := elasticsearch.AutoTuneMaintenanceSchedule{}
+				amsDuration := elasticsearch.Duration{}
+
 				schedule := v.(map[string]interface{})
-				ams.StartAt = schedule["start_at"].(*time.Time)
+				startAt, _ := time.Parse(time.RFC3339, schedule["start_at"].(string))
+				ams.SetStartAt(startAt)
+
+				duration := schedule["duration"].(map[string]interface{})
+				amsDuration.SetValue(duration["value"].(int64))
+				amsDuration.SetUnit(duration["unit"].(string))
+				ams.SetDuration(&amsDuration)
+
+				ams.SetCronExpressionForRecurrence(schedule["cron_expression"].(string))
+
+				config.MaintenanceSchedules = append(config.MaintenanceSchedules, &ams)
 			}
+
 		}
+
 	}
+
+	return &config
 }
 
 func expandESSAMLOptions(data []interface{}) *elasticsearch.SAMLOptionsInput {
