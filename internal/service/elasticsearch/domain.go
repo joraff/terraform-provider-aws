@@ -144,8 +144,9 @@ func ResourceDomain() *schema.Resource {
 										ValidateFunc: verify.ValidUTCTimestamp,
 									},
 									"duration": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"value": {
@@ -160,7 +161,7 @@ func ResourceDomain() *schema.Resource {
 											},
 										},
 									},
-									"cron_expression": {
+									"cron_expression_for_recurrence": {
 										Type:     schema.TypeString,
 										Required: true,
 									},

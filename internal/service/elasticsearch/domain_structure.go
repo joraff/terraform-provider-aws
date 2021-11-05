@@ -53,8 +53,8 @@ func expandAutoTuneOptions(m []interface{}) *elasticsearch.AutoTuneOptionsInput 
 	if desiredState := group["desired_state"].(string); desiredState == "ENABLED" {
 		config.SetDesiredState(desiredState)
 
-		if schedules, ok := group["maintenance_schedule"].([]interface{}); ok {
-			for _, v := range schedules {
+		if schedules, ok := group["maintenance_schedule"].(*schema.Set); ok {
+			for _, v := range schedules.List() {
 				ams := elasticsearch.AutoTuneMaintenanceSchedule{}
 				amsDuration := elasticsearch.Duration{}
 
@@ -62,12 +62,13 @@ func expandAutoTuneOptions(m []interface{}) *elasticsearch.AutoTuneOptionsInput 
 				startAt, _ := time.Parse(time.RFC3339, schedule["start_at"].(string))
 				ams.SetStartAt(startAt)
 
-				duration := schedule["duration"].(map[string]interface{})
-				amsDuration.SetValue(duration["value"].(int64))
+				k := schedule["duration"].([]interface{})
+				duration := k[0].(map[string]interface{})
+				amsDuration.Value = aws.Int64(int64(duration["value"].(int)))
 				amsDuration.SetUnit(duration["unit"].(string))
 				ams.SetDuration(&amsDuration)
 
-				ams.SetCronExpressionForRecurrence(schedule["cron_expression"].(string))
+				ams.SetCronExpressionForRecurrence(schedule["cron_expression_for_recurrence"].(string))
 
 				config.MaintenanceSchedules = append(config.MaintenanceSchedules, &ams)
 			}
